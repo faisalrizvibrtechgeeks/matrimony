@@ -12,7 +12,8 @@ use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use jeremykenedy\LaravelRoles\Models\Role;
-
+use Illuminate\Support\Facades\Mail;
+use App\Mail\Activation;
 class RegisterController extends Controller
 {
     /*
@@ -67,14 +68,13 @@ class RegisterController extends Controller
         return Validator::make(
             $data,
             [
-                'name'                  => 'required|max:255|unique:users|alpha_dash',
                 'first_name'            => 'alpha_dash',
                 'last_name'             => 'alpha_dash',
                 'email'                 => 'required|email|max:255|unique:users',
                 'password'              => 'required|min:6|max:30|confirmed',
                 'password_confirmation' => 'required|same:password',
                 'g-recaptcha-response'  => '',
-                'captcha'               => 'required|min:1',
+                'phone_number'               => 'required|size:10',
             ],
             [
                 'name.unique'                   => trans('auth.userNameTaken'),
@@ -112,10 +112,11 @@ class RegisterController extends Controller
         }
 
         $user = User::create([
-            'name'              => strip_tags($data['name']),
+            'name'              => strip_tags($data['first_name']) .' '.strip_tags($data['last_name']),
             'first_name'        => strip_tags($data['first_name']),
             'last_name'         => strip_tags($data['last_name']),
             'email'             => $data['email'],
+            'phone_number'      => $data['phone_number'],
             'password'          => Hash::make($data['password']),
             'token'             => str_random(64),
             'signup_ip_address' => $ipAddress->getClientIp(),
@@ -124,11 +125,14 @@ class RegisterController extends Controller
 
         $user->attachRole($role);
         $this->initiateEmailActivation($user);
-
         $profile = new Profile();
         $user->profile()->save($profile);
         $user->save();
 
         return $user;
+    }
+    public function send_mail(){
+        Mail::to('syedfaisalrizvi0@gmail.com')->send(new Activation());
+        die;
     }
 }

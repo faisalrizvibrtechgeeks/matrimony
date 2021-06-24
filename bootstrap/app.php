@@ -26,6 +26,15 @@ $app = new Illuminate\Foundation\Application(
 |
 */
 
+switch(array_shift(explode(".",$_SERVER['HTTP_HOST']))){
+    case 'localhost:8000':
+        $app->loadEnvironmentFrom('.env');
+        break;
+    default:
+	$app->loadEnvironmentFrom('.env.production');
+	break;
+};
+
 $app->singleton(
     Illuminate\Contracts\Http\Kernel::class,
     App\Http\Kernel::class
